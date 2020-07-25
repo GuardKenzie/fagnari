@@ -90,7 +90,7 @@ gwendolyn.remove_command("help")
 db = Database("servers.db")
 
 # Accent colour
-accent_colour = discord.Colour.blurple()
+accent_colour = discord.Colour(int("698a9e", 16))
 
 # Admin perm cehck
 def config_permission(ctx):
