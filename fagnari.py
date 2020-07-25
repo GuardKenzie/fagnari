@@ -2,7 +2,6 @@
 # 2020-07-24 23:02
 # Filename: fagnari.py 
 
-import math
 import sys
 import sqlite3
 import discord
@@ -105,7 +104,9 @@ def config_permission(ctx):
 
 @fagnari.event
 async def on_ready():
-    print(f"User:\t\t\t{fagnari.user}")
+    print(f"User:\t\t{fagnari.user}")
+    for guild in fagnari.guilds:
+        print(guild.name)
     print()
 
 
@@ -263,8 +264,7 @@ async def configure(ctx):
 
     # funciton for editing a message
     async def editMessage(msg, entry):
-        # Clear reactions
-        await msg.clear_reactions()
+
 
         # Set the channel title
         if entry == "greetMessage":
@@ -279,11 +279,17 @@ async def configure(ctx):
             data = db.get(ctx.guild)
 
         # Generate embed
-
         embed = discord.Embed(title=f"Updating the {messagetitle} message", description=f"React with the appropriate emoji:\n\n {checkmark} Update the message\n\n{unset} Unset the message\n\n{cancel} Cancel", colour=accent_colour)
         embed.add_field(name="Currently set to", value=str(data[entry]).format(username="**USER**"))
 
-        await msg.edit(embed=embed)
+
+        # Clear reactions
+        try:
+            await msg.clear_reactions()
+            await msg.edit(embed=embed)
+        except discord.errors.Forbidden:
+            await msg.delete()
+            msg = await ctx.channel.send(embed=embed)
 
         # Add reactions
         await msg.add_reaction(checkmark)
@@ -297,22 +303,25 @@ async def configure(ctx):
         try:
             r, _ = await fagnari.wait_for("reaction_add", check=check)
         except asyncio.TimeoutError:
-            return
+            return msg
 
         if r.emoji == unset:
             # Unset
             data[entry] = None
         elif r.emoji == cancel:
             # cancel
-            return
+            return msg
         elif r.emoji == checkmark:
-            # Clear reactions
-            await msg.clear_reactions()
-
             # Edit message
             embed = discord.Embed(title=f"Setting the {messagetitle} message", description="Please reply with the message you would like to set.\nUse `{username}` as a placeholder for the user's username.", colour=accent_colour)
 
-            await msg.edit(embed=embed)
+            # Clear reactions
+            try:
+                await msg.clear_reactions()
+                await msg.edit(embed=embed)
+            except discord.errors.Forbidden:
+                await msg.delete()
+                msg = await ctx.channel.send(embed=embed)
 
             def check(msg):
                 return msg.author == ctx.author
@@ -320,16 +329,20 @@ async def configure(ctx):
             try:
                 reply = await fagnari.wait_for("message", check=check)
             except asyncio.TimeoutError:
-                return
+                return msg
             data[entry] = reply.content
+
+            try:
+                await reply.delete()
+            except discord.errors.Forbidden:
+                pass
 
         db.update(ctx.guild, data)
 
+        return msg
+
     # function for editing a channel
     async def editChannel(msg, entry):
-        # Clear reactions
-        await msg.clear_reactions()
-
         # Set the channel title
         if entry == "greetChannel":
             channeltitle = "greetings"
@@ -354,7 +367,13 @@ async def configure(ctx):
         embed = discord.Embed(title=f"Updating the {channeltitle} channel", description=f"React with the appropriate emoji:\n\n {checkmark} Set the channel\n\n{unset} Unset the channel\n\n{cancel} Cancel", colour=accent_colour)
         embed.add_field(name="Currently set to", value=mention)
 
-        await msg.edit(embed=embed)
+        # Clear reactions
+        try:
+            await msg.clear_reactions()
+            await msg.edit(embed=embed)
+        except  discord.errors.Forbidden:
+            await msg.delete()
+            msg = await ctx.channel.send(embed=embed)
 
         # Add reactions
         await msg.add_reaction(checkmark)
@@ -368,22 +387,25 @@ async def configure(ctx):
         try:
             r, _ = await fagnari.wait_for("reaction_add", check=check)
         except asyncio.TimeoutError:
-            return
+            return msg
 
         if r.emoji == unset:
             # Unset
             data[entry] = None
         elif r.emoji == cancel:
             # cancel
-            return
+            return msg
         elif r.emoji == checkmark:
-            # Clear reactions
-            await msg.clear_reactions()
-
             # Edit message
             embed = discord.Embed(title=f"Setting the {channeltitle} channel", description="Please reply with the channel mention. (The name with a `#` in front).", colour=accent_colour)
 
-            await msg.edit(embed=embed)
+            # Clear reactions
+            try:
+                await msg.clear_reactions()
+                await msg.edit(embed=embed)
+            except discord.errors.Forbidden:
+                await msg.delete()
+                msg = await ctx.channel.send(embed=embed)
 
             def check(msg):
                 return msg.author == ctx.author
@@ -399,12 +421,19 @@ async def configure(ctx):
                     except discord.ext.commands.BadArgument:
                         pass
             except asyncio.TimeoutError:
-                return
+                return msg
 
             # Update
             data[entry] = channel.id
 
+            try:
+                await reply.delete()
+            except discord.errors.Forbidden:
+                pass
+
         db.update(ctx.guild, data)
+
+        return msg
 
 
     # function for editing toggle
@@ -459,6 +488,7 @@ async def configure(ctx):
     configuremsg = await ctx.channel.send(embed=await genEmbed())
 
     updateReactions = True
+    first = True
 
     # Config loop
     while True:
@@ -466,7 +496,16 @@ async def configure(ctx):
         emojis_avail = emojis[0:6]
 
         if updateReactions:
-            await configuremsg.clear_reactions()
+            # Clear reactions
+            try:
+                if not first:
+                    await configuremsg.clear_reactions()
+            except discord.errors.Forbidden:
+                await configuremsg.delete()
+                configuremsg = await ctx.channel.send(embed=await genEmbed())
+
+            first = False
+            # Add back reactions
             for emoji in emojis_avail:
                 await configuremsg.add_reaction(emoji)
             await configuremsg.add_reaction(cancel)
@@ -486,22 +525,30 @@ async def configure(ctx):
         cmd = emojis_avail.index(r.emoji)
 
         if cmd == 0:
-            await editChannel(configuremsg, "greetChannel")
+            configuremsg = await editChannel(configuremsg, "greetChannel")
             updateReactions = True
         elif cmd == 1:
-            await editChannel(configuremsg, "logChannel")
+            configuremsg = await editChannel(configuremsg, "logChannel")
             updateReactions = True
         elif cmd == 2:
-            await editMessage(configuremsg, "greetMessage")
+            configuremsg = await editMessage(configuremsg, "greetMessage")
             updateReactions = True
         elif cmd == 3:
-            await editMessage(configuremsg, "farewellMessage")
+            configuremsg = await editMessage(configuremsg, "farewellMessage")
             updateReactions = True
         elif cmd == 4:
             editToggle("logJoin")
+            try:
+                await r.remove(ctx.author)
+            except discord.errors.Forbidden:
+                pass
             updateReactions = False
         elif cmd == 5:
             editToggle("logLeave")
+            try:
+                await r.remove(ctx.author)
+            except discord.errors.Forbidden:
+                pass
             updateReactions = False
 
         if updateReactions:
