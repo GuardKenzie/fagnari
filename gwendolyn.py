@@ -78,8 +78,11 @@ with open("config.json", "r") as f:
     config = json.loads(f.read())
 
 # Init bot
+activity = discord.Game("g!help")
+
 gwendolyn = commands.Bot(case_insensitive=True,
-                       command_prefix=config["prefixes"])
+                         command_prefix=config["prefixes"],
+                         activity=activity)
 
 gwendolyn.remove_command("help")
 
