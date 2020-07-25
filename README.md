@@ -1,4 +1,4 @@
-# Fagnari
+# Gwendolyn
 A simple greeter bot for discord.
 
 ## Features
