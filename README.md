@@ -7,7 +7,9 @@ A simple greeter bot for discord.
 * A configurable log channel for users coming and going
 
 ## Commands
-```
-g!help
-```
-Prints the help message
+The command prefix is `g!`
+
+* `g!help` Prints the help message
+* `g!configure` Launches the configuration
+* `g!ping` Pings the bot
+* `g!forget` Deletes all stored information relating to the server
