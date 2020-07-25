@@ -1,6 +1,6 @@
 # Author: Tristan Ferrua
 # 2020-07-24 23:02
-# Filename: fagnari.py 
+# Filename: gwendolyn.py 
 
 import sys
 import sqlite3
@@ -78,10 +78,10 @@ with open("config.json", "r") as f:
     config = json.loads(f.read())
 
 # Init bot
-fagnari = commands.Bot(case_insensitive=True,
+gwendolyn = commands.Bot(case_insensitive=True,
                        command_prefix=config["prefixes"])
 
-fagnari.remove_command("help")
+gwendolyn.remove_command("help")
 
 # Database class
 db = Database("servers.db")
@@ -102,21 +102,21 @@ def config_permission(ctx):
 
 
 
-@fagnari.event
+@gwendolyn.event
 async def on_ready():
-    print(f"User:\t\t{fagnari.user}")
-    for guild in fagnari.guilds:
+    print(f"User:\t\t{gwendolyn.user}")
+    for guild in gwendolyn.guilds:
         print(guild.name)
     print()
 
 
-@fagnari.event
+@gwendolyn.event
 async def on_guild_join(guild):
     db.start(guild)
     print(f"Joined guild {guild.name}")
 
 
-@fagnari.event
+@gwendolyn.event
 async def on_member_join(member):
     # Get current date and time
     date = datetime.datetime.utcnow().strftime("%d %b %Y at %H:%M UTC")
@@ -163,7 +163,7 @@ async def on_member_join(member):
             await logChannel.send(embed=embed)
 
 
-@fagnari.event
+@gwendolyn.event
 async def on_member_remove(member):
     # Get current date and time
     date = datetime.datetime.utcnow().strftime("%d %b %Y at %H:%M UTC")
@@ -209,12 +209,12 @@ async def on_member_remove(member):
             embed.set_image(url=member.avatar_url)
             await logChannel.send(embed=embed)
 
-@fagnari.event
+@gwendolyn.event
 async def on_guild_remove(guild):
     db.forget(guild)
 
 
-@fagnari.event
+@gwendolyn.event
 async def on_command_error(ctx, error):
     print("COMMAND ERROR")
     print("Command:\t{}".format(ctx.message.content))
@@ -227,12 +227,12 @@ async def on_command_error(ctx, error):
         await ctx.author.send(content="There was an unknown error executing your command `{}`.".format(ctx.message.content))
 
 
-@fagnari.command()
+@gwendolyn.command()
 async def ping(ctx):
     await ctx.channel.send("Pong!")
 
 
-@fagnari.command()
+@gwendolyn.command()
 async def help(ctx):
     prefix = config["prefixes"][0]
     embed = discord.Embed(title="Help", colour=accent_colour)
@@ -244,7 +244,7 @@ async def help(ctx):
     await ctx.author.send(embed=embed)
 
 
-@fagnari.command(checks=[config_permission])
+@gwendolyn.command(checks=[config_permission])
 async def configure(ctx):
     # Configuration for the bot
 
@@ -301,7 +301,7 @@ async def configure(ctx):
 
         # Wait for input
         try:
-            r, _ = await fagnari.wait_for("reaction_add", check=check)
+            r, _ = await gwendolyn.wait_for("reaction_add", check=check)
         except asyncio.TimeoutError:
             return msg
 
@@ -327,7 +327,7 @@ async def configure(ctx):
                 return msg.author == ctx.author
 
             try:
-                reply = await fagnari.wait_for("message", check=check)
+                reply = await gwendolyn.wait_for("message", check=check)
             except asyncio.TimeoutError:
                 return msg
             data[entry] = reply.content
@@ -385,7 +385,7 @@ async def configure(ctx):
 
         # Wait for input
         try:
-            r, _ = await fagnari.wait_for("reaction_add", check=check)
+            r, _ = await gwendolyn.wait_for("reaction_add", check=check)
         except asyncio.TimeoutError:
             return msg
 
@@ -413,7 +413,7 @@ async def configure(ctx):
             # Wait for reply
             try:
                 while True:
-                    reply = await fagnari.wait_for("message", check=check)
+                    reply = await gwendolyn.wait_for("message", check=check)
                     # Check if channel is valid
                     try:
                         channel = await tcc.convert(ctx, reply.content)
@@ -518,7 +518,7 @@ async def configure(ctx):
 
         # Wait for input
         try:
-            r, _ = await fagnari.wait_for("reaction_add", check=check)
+            r, _ = await gwendolyn.wait_for("reaction_add", check=check)
         except asyncio.TimeoutError:
             break
 
@@ -567,12 +567,12 @@ async def configure(ctx):
     await configuremsg.delete()
 
 
-@fagnari.command(checks=[config_permission])
+@gwendolyn.command(checks=[config_permission])
 async def forget(ctx):
     db.forget(ctx.guild)
     await ctx.channel.send("All data deleted.")
 
 
 # Start bot
-fagnari.run(config["discord_api_key"])
+gwendolyn.run(config["discord_api_key"])
 
