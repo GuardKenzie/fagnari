@@ -96,7 +96,7 @@ accent_colour = discord.Colour(int("698a9e", 16))
 def config_permission(ctx):
     if not isinstance(ctx.channel, discord.abc.GuildChannel):
         return False
-    perms = (ctx.author == ctx.guild.owner)
+    perms = bool(ctx.author == ctx.guild.owner)
     for role in ctx.author.roles:
         if role.permissions.administrator:
             perms = True
