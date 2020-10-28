@@ -80,8 +80,12 @@ with open("config.json", "r") as f:
 # Init bot
 activity = discord.Game("g!help")
 
+intent = discord.Intents.default()
+intent.members = True
+
 gwendolyn = commands.Bot(case_insensitive=True,
                          command_prefix=config["prefixes"],
+                         intents=intent,
                          activity=activity)
 
 gwendolyn.remove_command("help")
