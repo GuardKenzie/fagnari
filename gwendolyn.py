@@ -125,6 +125,10 @@ async def on_guild_join(guild):
 
 @gwendolyn.event
 async def on_member_join(member):
+    # Check if bot
+    if member.bot:
+        return
+
     # Get current date and time
     date = datetime.datetime.utcnow().strftime("%d %b %Y at %H:%M UTC")
 
@@ -172,6 +176,10 @@ async def on_member_join(member):
 
 @gwendolyn.event
 async def on_member_remove(member):
+    # Check if bot
+    if member.bot:
+        return
+
     # Get current date and time
     date = datetime.datetime.utcnow().strftime("%d %b %Y at %H:%M UTC")
 
